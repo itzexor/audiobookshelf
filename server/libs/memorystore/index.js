@@ -267,7 +267,7 @@ module.exports = function (session) {
     if (ms && typeof ms === 'number') {
       clearInterval(this._checkInterval)
       debug('starting periodic check for expired sessions')
-      this._checkInterval = setInterval(this.prune, Math.floor(ms)).unref()
+      this._checkInterval = setInterval(() => this.prune(), Math.floor(ms)).unref()
     }
   }
 
