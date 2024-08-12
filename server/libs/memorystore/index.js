@@ -27,13 +27,6 @@ function getTTL(options, sess, sid) {
   return typeof maxAge === 'number' ? Math.floor(maxAge) : oneDay
 }
 
-function prune(store) {
-  debug('Pruning expired entries')
-  store.forEach(function (value, key) {
-    store.get(key)
-  })
-}
-
 var defer =
   typeof setImmediate === 'function'
     ? setImmediate
@@ -76,7 +69,7 @@ module.exports = function (session) {
     this.options.max = options.max
     this.options.ttl = options.ttl
     this.options.dispose = options.dispose
-    this.options.stale = options.stale
+    this.options.allowStale = options.allowStale
 
     this.serializer = options.serializer || JSON
     this.store = new LRUCache(this.options)
@@ -274,9 +267,7 @@ module.exports = function (session) {
     if (ms && typeof ms === 'number') {
       clearInterval(this._checkInterval)
       debug('starting periodic check for expired sessions')
-      this._checkInterval = setInterval(function () {
-        prune(self.store) // iterates over the entire cache proactively pruning old entries
-      }, Math.floor(ms)).unref()
+      this._checkInterval = setInterval(this.prune, Math.floor(ms)).unref()
     }
   }
 
@@ -296,7 +287,7 @@ module.exports = function (session) {
    */
 
   MemoryStore.prototype.prune = function () {
-    prune(this.store)
+    this.store.purgeStale()
   }
 
   return MemoryStore
